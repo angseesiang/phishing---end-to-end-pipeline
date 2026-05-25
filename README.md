@@ -7,9 +7,6 @@ The project is designed to be modular, configurable, and reproducible. It covers
 ## Project Structure
 
 ```text
-├── .github/
-│   └── workflows/
-│       └── github-actions.yml
 ├── src/
 │   ├── data_loader.py
 │   ├── model.py
