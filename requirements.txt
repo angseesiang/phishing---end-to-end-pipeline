@@ -1,0 +1,10 @@
+pandas==2.3.3
+numpy==2.2.6
+matplotlib==3.10.7
+seaborn==0.13.2
+plotly==6.5.0
+sqlalchemy==2.0.44
+scikit-learn==1.7.2
+ipywidgets==8.1.8
+jupyter==1.1.1
+pyyaml==6.0.3

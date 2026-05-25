@@ -1,0 +1,29 @@
+tuning:
+    n_iter: 5
+    cv: 5
+    scoring: 'f1'
+    n_jobs: -1
+
+models:
+  Logistic Regression:
+    clf__max_iter: [500]
+    clf__random_state: [42]
+    clf__class_weight: ['balanced']
+    clf__C: [0.01, 0.1, 1, 10, 100]
+
+  Random Forest:
+    clf__random_state: [42]
+    clf__class_weight: ['balanced', 'balanced_subsample']
+    clf__n_estimators: [50, 100, 150, 200]
+    clf__max_depth: [5, 10, 15, 20]
+    clf__min_samples_split: [2, 4, 6, 8, 10]
+    clf__min_samples_leaf: [1, 2, 3, 4, 5]
+
+  Gradient Boosting:
+    clf__random_state: [42]
+    clf__n_estimators: [50, 100, 150, 200]
+    clf__max_depth: [5, 10, 15, 20]
+    clf__min_samples_split: [2, 4, 6, 8, 10]
+    clf__min_samples_leaf: [1, 2, 3, 4, 5]
+    clf__learning_rate: [0.01, 0.1, 0.2]
+    clf__subsample: [0.5, 0.7, 0.9]
