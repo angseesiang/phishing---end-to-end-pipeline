@@ -1,224 +1,177 @@
-# CyberProtect: Phishing Website Detection System
+# Phishing Website Detection Pipeline
 
-## 1. My Information
-- **Full Name:** Ang See Siang
-- **Email:** ang_see_siang@yahoo.com  
+This repository contains an end-to-end machine learning pipeline for detecting phishing websites using structured website and hosting-related features stored in a SQLite database.
 
----
+The project is designed to be modular, configurable, and reproducible. It covers the full workflow from data loading and preprocessing to model training, hyperparameter tuning, and evaluation.
 
-## 2. Project Overview
+## Project Structure
 
-This repository contains my submission for **AIAPⓇ Batch 22 Technical Assessment**.  
-The goal is to design a **modular, configurable, and reproducible machine learning pipeline** for phishing website detection.
-
-The pipeline is built with the following principles:
-
-- **Modularity**: Each component (loading, preprocessing, modeling, tuning) lives in its own file.
-- **Reproducibility**: Fixed random seeds, deterministic flows.
-- **No data leakage**: Preprocessing happens inside Pipelines.
-- **Configurability**: Hyperparameters controlled through a YAML file.
-- **Explainability**: Clear evaluation metrics and meaningful modeling choices.
-
----
-
-## 3. Folder Structure Overview
-
-```
+```text
 ├── .github/
 │   └── workflows/
-│       └── github-actions.yml    # GitHub Actions CI/CD workflow
-│
+│       └── github-actions.yml
 ├── src/
-│   ├── data_loader.py            # Reads SQLite database and cleans NoOfImage
-│   ├── model.py                  # Data Preprocessing, Model creation, HPO, training, evaluation
-│   ├── mlp.py                    # Main end-to-end ML pipeline
+│   ├── data_loader.py
+│   ├── model.py
+│   ├── mlp.py
 │   └── config/
-│       ├── loader.py             # Loads YAML config safely
-│       └── hyperparameter.yaml   # Config for RandomizedSearchCV tuning
-│
-├── .gitignore                    # Git ignore file
-├── eda.ipynb                     # Task 1 Exploratory Data Analysis
-├── requirements.txt              # Python dependencies
-├── run.sh                        # Shell script to execute pipeline
-└── README.md                     # This file
+│       ├── loader.py
+│       └── hyperparameter.yaml
+├── .gitignore
+├── eda.ipynb
+├── requirements.txt
+├── run.sh
+└── README.md
 ```
 
----
+## Project Overview
 
-## 4. How to Run the Pipeline
+The goal of this project is to build a machine learning pipeline that classifies websites as either phishing or legitimate based on website metadata, page structure, hosting information, and other engineered features.
 
-### Step 1 — Install Dependencies
+The pipeline is built around the following principles:
+
+- **Modularity**: Core tasks such as loading, preprocessing, modeling, and configuration are separated into dedicated files.
+- **Reproducibility**: Random seeds and controlled configuration settings are used to make experiments more consistent.
+- **Leakage prevention**: Preprocessing is handled inside machine learning pipelines to reduce the risk of data leakage.
+- **Configurability**: Hyperparameter tuning settings are managed through a YAML configuration file.
+- **Evaluation focus**: Metrics such as recall and F1-score are emphasized because phishing detection is sensitive to false negatives.
+
+## Pipeline Flow
+
+```text
+Load SQLite Dataset
+        ↓
+Clean and Validate Data
+        ↓
+Train-Test Split
+        ↓
+Build Preprocessing Pipeline
+        ↓
+Train Classification Models
+        ↓
+Optional Hyperparameter Tuning
+        ↓
+Evaluate Model Performance
+```
+
+## How to Run the Project
+
+### 1. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 2 — Ensure the Database Exists
-Place the provided `phishing.db` file inside the `data/` folder:
+### 2. Prepare the Dataset
 
-```
+Place the `phishing.db` SQLite database file inside the `data/` directory:
+
+```text
 data/phishing.db
 ```
 
-### Step 3 — Run the Pipeline
-Using the provided shell script:
+### 3. Run the Pipeline
+
+Run the project using the provided shell script:
 
 ```bash
 ./run.sh
 ```
 
----
+If needed, make the script executable first:
 
-## 5. Modifying Parameters (Hyperparameter Tuning)
-
-Hyperparameters and tuning settings are configured via:
-
+```bash
+chmod +x run.sh
 ```
+
+## Configuration
+
+Hyperparameter tuning settings are stored in:
+
+```text
 src/config/hyperparameter.yaml
 ```
 
-Example:
+Example configuration structure:
+
 ```yaml
 tuning:
   n_iter: 5
   cv: 3
-  scoring: 'f1'
+  scoring: f1
 
 models:
   Random Forest:
     clf__n_estimators: [50, 100, 200]
     clf__max_depth: [null, 5, 10]
     clf__min_samples_split: [2, 5, 10]
-    ...
 ```
 
-To modify tuning behavior, simply edit this file—**no code changes required**.
+You can adjust model parameters, cross-validation settings, scoring metrics, and tuning iterations from this file without changing the main pipeline code.
 
----
+## Exploratory Data Analysis Summary
 
-## 6. Pipeline Flow (Logical Steps)
+The exploratory data analysis notebook, `eda.ipynb`, examines the dataset structure, missing values, feature distributions, label balance, and potential relationships between website attributes and phishing risk.
 
-```
-   ┌─────────────────────┐
-   │ Load SQLite Dataset │
-   └──────────┬──────────┘
-              ▼
-   ┌──────────────────────┐
-   │ Train-Test Split     │
-   │ (stratified 80/20)   │
-   └──────────┬───────────┘
-              ▼
-   ┌───────────────────────────────┐
-   │ Build Preprocessing Pipeline  │
-   │ (impute → scale → encode)     │
-   └──────────┬────────────────────┘
-              ▼
-   ┌───────────────────────────────┐
-   │ Build ML Pipelines (LR, RF,   │
-   │ Gradient Boosting)            │
-   └──────────┬────────────────────┘
-              ▼
-   ┌───────────────────────────────┐
-   │ Optional Hyperparameter Tuning│
-   │ via RandomizedSearchCV/YAML   │
-   └──────────┬────────────────────┘
-              ▼
-   ┌───────────────────────────────┐
-   │ Train Final Models            │
-   └──────────┬────────────────────┘
-              ▼
-   ┌───────────────────────────────┐
-   │ Evaluate Models (metrics)     │
-   └───────────────────────────────┘
-```
+Key observations include:
 
----
+- The dataset contains structured website-level features and a binary target label.
+- Most features are numeric, while selected columns such as `Industry` and `HostingProvider` are categorical.
+- `LineOfCode` contains missing values and is handled with median imputation.
+- `NoOfImage` may contain invalid negative values and is corrected during data loading.
+- Several numeric variables are skewed, which motivates the use of robust scaling.
+- The classification target is slightly imbalanced, making recall and F1-score important evaluation metrics.
 
-## 7. Summary of Key EDA Findings (from Task 1)
+## Feature Processing
 
-### Dataset Structure
-- The dataset contains 10,500 rows and 16 features
-- Most features are numeric, with two categorical columns: `Industry` and `HostingProvider`
+| Feature Group | Example Columns | Processing Applied | Purpose |
+| --- | --- | --- | --- |
+| Data correction | `NoOfImage` | Clip negative values to zero | Fix invalid values |
+| Numeric features | `LineOfCode`, `LargestLineLength`, redirect counts | Median imputation and robust scaling | Handle missing values, skew, and outliers |
+| Categorical features | `Industry`, `HostingProvider` | Most-frequent imputation and one-hot encoding | Convert categories into model-ready features |
+| Binary/count features | `Robots`, `IsResponsive` | Passthrough where appropriate | Preserve already usable inputs |
 
-### Data Quality Observations
-- `LineOfCode` is the only feature with missing values (~22%) → Median imputation chosen for robustness against skew
-- `NoOfImage` contains negative values, which are invalid → Corrected by clipping values to ≥ 0 during data loading
-- No other columns contain missing values
+## Models Used
 
-### Distribution Characteristics
-- Many numeric features (e.g., `LargestLineLength`, `redirect counts`) are right-skewed → Motivated the use of `RobustScaler` to reduce outlier influence
-- Categorical features have moderate cardinality, making `OneHotEncoder` appropriate.
-- Several numeric variables show long-tailed distributions, common for HTML/website metrics.
+The pipeline compares multiple model families to evaluate different approaches to phishing detection:
 
-### Label Imbalance
-- Labels are slightly imbalanced: Legitimate (55%) and Phishing (45%)
-- Chosen metrics emphasize `Recall` and `F1-score`
+### Logistic Regression
 
-### Bivariate & Domain Interpretations
-- Features such as `redirect counts`, `iframe usage`, and `external references` show intuitive differences between phishing and legitimate sites.
-- Domain-related fields like `Industry` and `HostingProvider` display uneven distributions but remain informative.
+Logistic Regression is used as a strong baseline model. It is fast, interpretable, and effective for high-dimensional feature spaces, especially after one-hot encoding categorical variables.
 
----
+### Random Forest
 
-## 8. Feature Processing Summary
+Random Forest is included as a nonlinear tree-based model. It can capture feature interactions, handle noisy data, and provide useful feature-importance insights.
 
-| Feature Group              | Columns                                  | Transformation                          | Rationale |
-|----------------------------|-------------------------------------------|------------------------------------------|----------|
-| Data Correction            | NoOfImage                                 | Clipped to `[0, ∞)`                      | Fixes invalid negatives |
-| Numeric (skewed)           | LineOfCode, LargestLineLength, etc.       | Median impute + RobustScaler             | Handle missing values and outliers |
-| Categorical                | Industry, HostingProvider                 | Most-frequent impute + OneHotEncoder     | Handle missing & unseen categories |
-| Binary / Count Features    | Robots, IsResponsive                      | Passthrough                              | Already clean |
+### Gradient Boosting
 
----
+Gradient Boosting is included as a performance-oriented model for structured tabular data. It can capture subtle patterns by sequentially improving on earlier model errors.
 
-## 9. Choice of Models
+## Model Evaluation
 
-Three different classifiers were selected to provide a balanced comparison across **linear, tree-based, and boosting** approaches. The selection was guided by observations from the EDA and the characteristics of the dataset.
+The following metrics are used to evaluate classification performance:
 
-- **Logistic Regression**: serves as a **strong baseline model**
-    - It provides a fast, interpretable linear decision boundary.
-    - It handles high-dimensional sparse features well (important after `OneHotEncoding`).
-    - It allows us to benchmark whether nonlinear models offer meaningful improvements.
-    - It is easy to train and robust even with moderate class imbalance.
-    - The dataset contains multiple numeric and categorical features, and LR provides a good check on how much linear separability exists in the phishing vs. legitimate classes.
-- **Random Forest**: is chosen as a **nonlinear, tree-based model**
-    - It handles feature interactions and nonlinear relationships automatically.
-    - It is robust to noise, outliers, and mixed data types.
-    - It provides built-in feature importance, helpful for interpretability.
-    - It performs well even with minimal preprocessing.
-    - EDA showed many features have skewed distributions and non-linear behavior (e.g., redirect counts, external reference counts). Random Forest can naturally capture this complexity.
-    - It also benefits significantly from structured hyperparameter tuning.
-- **Gradient Boosting**: is included as a **high-performance model** commonly used for structured/tabular data
-    - It learns sequentially, correcting mistakes of earlier trees.
-    - it often outperforms Random Forest on tabular datasets.
-    - It handles complex patterns and subtle interactions effectively.
-    - It is more sensitive to hyperparameters, but capable of superior results.
-    - The dataset is relatively clean, medium-sized (10k rows), and contains several engineered numeric counts — an ideal scenario for boosting algorithms, which excel at exploiting small but informative signals.
+- Confusion matrix
+- Accuracy
+- Precision
+- Recall
+- F1-score
+- ROC-AUC
 
----
+For phishing detection, recall is especially important because misclassifying a phishing website as legitimate can create a higher security risk than flagging a legitimate website for review. F1-score is also useful because it balances precision and recall.
 
-## 10. Model Evaluation
+## Deployment Considerations
 
-To evaluate classification performance, the following metrics are reported:
+Potential production considerations include:
 
-- Confusion Matrix – Visual breakdown of true/false positives and negatives.
-- Accuracy – Overall proportion of correct predictions.
-- Precision – Proportion of predicted phishing sites that are truly phishing.
-- **Recall** – Proportion of actual phishing sites correctly identified.
-- **F1-score** – Harmonic mean of precision and recall; balances false positives and false negatives.
-- ROC-AUC – Measures the model’s ability to distinguish between classes at various thresholds.
+- Monitoring feature drift across website and hosting patterns.
+- Retraining the model periodically as phishing behavior changes.
+- Serializing trained models with `joblib` for reuse.
+- Ensuring preprocessing steps are bundled with the model pipeline.
+- Handling unseen categorical values safely during inference.
 
-In the phishing detection domain, **Recall and F1-score** are especially critical:
-- A false negative (i.e. a phishing website classified as legitimate) is much more dangerous than a false positive.
-- Therefore, high recall ensures the model captures as many phishing cases as possible.
-- F1-score balances this with precision, helping avoid excessive false alarms.
+## Notes
 
----
-
-## 11. Deployment Considerations
-
-- **Drift detection**: Monitor `Industry`/`HostingProvider` trends.
-- **Retraining**: Schedule periodic model updates.
-- **Serialization**: Store trained models using `joblib`.
-- **Inference**: `OneHotEncoder` is robust to unseen categories (`handle_unknown="ignore"`).
-
----
+- The project expects the SQLite database to be available under the `data/` directory.
+- Hyperparameter tuning is controlled through the YAML configuration file.
+- The pipeline is designed for experimentation, learning, and reproducible model development.
